@@ -36,7 +36,7 @@ void location::insert(locNode *&node, int vnum, std::string name, std::string de
     if (node == nullptr) { // current spot in the pointer list is empty
         node = new locNode(vnum, name, description);
     }
-    else if (vnum < node->vnum)                             // if the list is longer than current position
+    else if (vnum > node->vnum)                             // if the list is longer than current position
         insert(node->next, vnum, name, description);   // move until it gets to the end
 }
 
