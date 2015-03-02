@@ -18,7 +18,7 @@ extern "C" {
 }
 
 #include "player.h"
-#include "Rooms.h"
+#include "rooms.h"
 
 using namespace std;
 using namespace luabridge;
@@ -26,162 +26,14 @@ using namespace luabridge;
 // declarations from other scripts
 vector<string> preParse(const string& playerInput);                 // Parser.cpp
 vector<string> prepositionTemp(const vector<string>& refParse);     // Parser.cpp
+int parse(const std::string pWord);                                 // Parser.cpp
 struct Player;      // rooms.h
 struct location;    // rooms.h
-
-int luaTest() {
-    lua_State* L = luaL_newstate();
-    const string filename = "script.lua"; // the name of the file we will load (never change, keep const)
-    
-    luaL_dofile(L, filename.c_str());
-    luaL_openlibs(L);
-    lua_pcall(L, 0, 0, 0);
-    
-    if (luaL_loadfile(L, filename.c_str()) || lua_pcall(L, 0, 0, 0)) { // checking if the script is loaded
-        cout << "Lua file not loaded!" << endl; // script is not loaded
-        return -1; // end program due to no script loaded
-    }
-    
-    LuaRef main = getGlobal(L, "testing");
-    LuaRef s = main["testString"];
-    LuaRef n = main["number"];
-    LuaRef x = main["null"];
-    
-    int z = 1;
-    if (x.isNil())
-        z = -1;
-    
-    if (s.isNil() || n.isNil()) {  // if either string variable is nil
-        cout << "Variable not found!" << endl;  // show error
-        return 0; // and end execution
-    }
-    string luaString = s.cast<string>();
-    int answer = n.cast<int>();
-    cout << luaString << endl;
-    cout << "And here's our number:" << answer << endl;
-    cout << "Test outputting a nil field: " << z << endl;
-    
-    return 0;
-}
-
-int luaVectorTest() {
-    lua_State* L = luaL_newstate();
-    const string filename = "script.lua";
-    
-    luaL_dofile(L, filename.c_str());
-    luaL_openlibs(L);
-    lua_pcall(L, 0, 0, 0);
-    
-    if (luaL_loadfile(L, filename.c_str()) || lua_pcall(L, 0, 0, 0)) { // checking if the script is loaded
-        cout << "Lua file not loaded!" << endl; // script is not loaded
-        return -1; // end program due to no script loaded
-    }
-    
-    // grab initial values to check reading from lua file is correct
-    LuaRef main = getGlobal(L, "testing");
-    LuaRef s = main["testString"];
-    LuaRef n = main["number"];
-    
-    string testString = s.cast<string>();
-    int testNumber = n.cast<int>();
-    
-    cout << "Test varibles: " << testString << endl;
-    cout << "Test integer: " << testNumber << endl;
-    
-    LuaRef table = getGlobal(L, "table");
-    
-    string mainString = table["main"].cast<string>();
-    cout << mainString << endl;
-    
-    LuaRef array = table["array"];
-    
-    for (int i = 1; i < array.length() + 1; i++) {
-        LuaRef check = array[i];
-        cout << check.cast<string>() << endl;
-    }
-    
-    
-    return 0;
-}
-
-int PrepositionRemovalTest() {
-    
-    bool running = true;
-    string pInput, outParse, yesno;
-    vector<string> outputParse;
-    
-    cout << "Prepositional Removal Parse Test\n" << endl;
-    
-    while (running) {
-        cout << "Parse input: ";
-        getline(cin, pInput);
-        cout << endl;
-        
-        // Parse the input and remove the prepositions in one swift move
-        outputParse = prepositionTemp(preParse(pInput));
-        
-        // now to arrange the output parse in a single string
-        for (int i = 0; i < outputParse.size(); i++) {
-            outParse += outputParse.at(i);
-            outParse += " ";
-        }
-        outParse = outParse.substr(0, outParse.size() - 1); // removal of last whitespace
-        
-        // Print the output with prepositions removed
-        cout << "Input: " << pInput << endl;
-        cout << "Output: " << outParse << endl;
-        
-        outputParse.clear(); // empty the vector
-        
-        // ask to parse another input
-        //cout << "\nParse another input? (Y/N): ";
-        //cin >> yesno;
-        //cout << endl;
-        
-       // if (yesno == "N" || yesno == "n")
-            running = false;
-        
-    }
-    
-    return 0;
-}
-
-int nilname() {
-    /*      This function will try and see how loading a stack within an lua table WITHOUT
-            a stackname declared. Trial Function. If this works, apply the structure to ROOMS.LUA
-     
-                Function works! No problems encountered!
-     */
-    
-    lua_State* L = luaL_newstate();
-    const string filename = "script.lua";
-    
-    luaL_dofile(L, filename.c_str());
-    luaL_openlibs(L);
-    lua_pcall(L, 0, 0, 0);
-    
-    if (luaL_loadfile(L, filename.c_str()) || lua_pcall(L, 0, 0, 0)) { // checking if the script is loaded
-        cout << "Lua file not loaded!" << endl; // script is not loaded
-        return -1; // end program due to no script loaded
-    }
-    
-    // grab initial values to check reading from lua file is correct
-    LuaRef main = getGlobal(L, "nilname");
-
-    for (int i = 1; i < main.length() + 1; i++) {
-        LuaRef print = main[i];
-        LuaRef out = print["main"];
-        cout << i << " - " << out << endl;
-    }
-
-    
-    return 0;
-}
 
 int playerTesting() {
     
     // variables
-    //bool running = true; // false = game stops
+    bool running = true; // false = game stops
     string pInput, outParse, yesno, locInfo1, locInfo2;
     vector<string> outputParse;
     
@@ -204,7 +56,7 @@ int playerTesting() {
     }
     
     // set up LuaRefs
-    LuaRef Main = getGlobal(L, "Design2");
+    LuaRef Main = getGlobal(L, "Rooms");
     
     // create a player and rooms structs
     Player newPlayer;
@@ -216,31 +68,76 @@ int playerTesting() {
     
     // load the rooms and set player at room 1
     for (int i = 1; i < Main.length() + 1; i++) {
-        cout << "loop test : " << i << endl;
+        
+        // LuaRef List!
         LuaRef rmsPos = Main[i];
         LuaRef name = rmsPos["name"];
         LuaRef desc = rmsPos["description"];
-        if (!name.isNil()) {                          // check if it is empty
-            locInfo1 = name.cast<string>();         // push the casted string to the stack
+        
+        if (!name.isNil()) //{                              // check if it is empty
+            locInfo1 = name.cast<string>();                 // push the casted string to the stack
+       /* } else {
+            cout << "name container is nil" << endl;  }*/
+        
+        if (!desc.isNil()) {                                // check if it is empty
+            locInfo2 = desc.cast<string>();                 // cast to string
         } else {
-            cout << "name container is nil" << endl;
+            locInfo2 = "An empty description container";    // load in an empty description
         }
-        if (!desc.isNil()) {                         // check if it is empty
-            locInfo2 = desc.cast<string>();  // cast to string
-        } else {
-            cout << "**description container is nil**" << endl;
-            locInfo2 = "An empty description container"; // load in an empty description
-        }
-        loc.insert(loc.root, i, locInfo1, locInfo2);
+        
+        
+        loc.insert(loc.root, loc.root, i, locInfo1, locInfo2);
     }//*/
+    
+    // Load in the directions
+    for (int i = 1; i < Main.length() + 1; i++) {
+        
+        LuaRef rmsPos = Main[i];
+        LuaRef vnum = rmsPos["vnum"];
+        
+        // Set directions up
+        LuaRef north = rmsPos["north"];
+        LuaRef east = rmsPos["east"];
+        LuaRef south = rmsPos["south"];
+        LuaRef west = rmsPos["west"];
+        LuaRef up = rmsPos["up"];
+        LuaRef down = rmsPos["down"];
+        
+        // int containers
+        int iN, iE, iS, iW, iU, iD;
+        
+        // Load Exit Directions
+        if (!north.isNil()) {
+            iN = loc.roomVnum(loc.root, north.cast<string>(), 0);
+        } else { iN = -1; }
+        if (!east.isNil()) {
+            iE = loc.roomVnum(loc.root, east.cast<string>(), 0);
+        } else { iE = -1; }
+        if (!south.isNil()) {
+            iS = loc.roomVnum(loc.root, south.cast<string>(), 0);
+        } else { iS = -1; }
+        if (!west.isNil()) {
+            iW = loc.roomVnum(loc.root, west.cast<string>(), 0);
+        } else { iW = -1; }
+        if (!up.isNil()) {
+            iU = loc.roomVnum(loc.root, up.cast<string>(), 0);
+        } else { iU = -1; }
+        if (!down.isNil()) {
+            iD = loc.roomVnum(loc.root, down.cast<string>(), 0);
+        } else { iD = -1; }
+     
+        // now, set up the exits to the room
+        loc.assignExits(loc.root, i, iN, iE, iS, iW, iU, iD);
+        
+    }
+    
     newPlayer.location = 1; // sets the player's vnum location at 1
     
     cout << "Player Testing! Multi-lua script loading will be tested later!" << endl;
     cout << newPlayer.name << ", welcome to the world!" << endl;
     
-    loc.print(loc.root);
     loc.description(loc.root, newPlayer.location);
-    /*
+    
     // start game loop
     while (running) {
         cout << "What would you like to do?" << endl;
@@ -248,40 +145,63 @@ int playerTesting() {
         getline(cin, pInput);
         cout << endl;
         
-        // Parse the input and remove the prepositions in one swift move
-        outputParse = prepositionTemp(preParse(pInput));
+        if (pInput != "") {
+            outputParse = prepositionTemp(preParse(pInput)); // split parse and remove prepositions
         
-        // now to arrange the output parse in a single string
-        for (int i = 0; i < outputParse.size(); i++) {
-            outParse += outputParse.at(i);
-            outParse += " ";
+            switch (parse(outputParse.at(0))) {  // parse the verb
+                case 0:
+                    // NYI
+                    break;
+                case 99: // player entered "exit" or "quit" (lua script these)
+                    running = false;
+                    break;
+                case 1: // 1 = move/go
+                    // sort the directions
+                    int dir = -1;
+                    if (outputParse.at(1) == "north")
+                        dir = 0;
+                    if (outputParse.at(1) == "east")
+                        dir = 1;
+                    if (outputParse.at(1) == "south")
+                        dir = 2;
+                    if (outputParse.at(1) == "west")
+                        dir = 3;
+                    if (outputParse.at(1) == "up")
+                        dir = 4;
+                    if (outputParse.at(1) == "down")
+                        dir = 5;
+                
+                    if (dir != -1)
+                        newPlayer.movePlayer(&newPlayer, loc.root, newPlayer.location, dir);
+                
+                    break;
+                    
+                
+            }
+        
+            // now to arrange the output parse in a single string
+            for (int i = 0; i < outputParse.size(); i++) {
+                outParse += outputParse.at(i);
+                outParse += " ";
+            }
+            outParse = outParse.substr(0, outParse.size() - 1); // removal of last whitespace
+        
+            outParse.clear();       // empty the output parse string
+            outputParse.clear();    // empty the vector
         }
-        outParse = outParse.substr(0, outParse.size() - 1); // removal of last whitespace
-        
-        // Print the output with prepositions removed
-        cout << "Input: " << pInput << endl;
-        cout << "Output: " << outParse << endl;
-        
-        outputParse.clear(); // empty the vector
         
     };//*/
     
     cout << "playerTesting ended!" << endl;
-    cout << "Feb 27 2015 - Rikki Jones" << endl;
+    cout << "Start Date: 27 Feb 2015 - Rikki Jones" << endl;
+    cout << "End Date: 02 Mar 2015 - Rikki Jones" << endl;
     
     return 0;
 }
 
 int main() {
-    
-//    luaTest();                        // passed!
-//    luaVectorTest();                  // passed!
-//    PrepositionRemovalTest();         // passed!
-//    nilname();                        // passed!
-//    stuff();
-//    cout << "Binary Tree Inorder Print" << endl;
 
-    playerTesting();
+    playerTesting();                    // moving around the world - passed!
     
     return 0;
     
