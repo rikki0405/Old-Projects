@@ -67,3 +67,74 @@ vector<string> prepositionTemp(const vector<string>& refParse) {
     
     return vDynamic; // updated vector with no prepositions is returned
 }
+
+int parse(const std::string pWord) {
+    
+    lua_State* L = luaL_newstate();
+    const string filename = "language.lua";
+    
+    luaL_dofile(L, filename.c_str()); // loading this everytime a parse is executed
+    luaL_openlibs(L);               // allows the lua file to be edited during runtime
+    lua_pcall(L, 0, 0, 0);
+    
+    // error handling
+    if (luaL_loadfile(L, filename.c_str()) || lua_pcall(L, 0, 0, 0)) { // checking if the script is loaded
+        cout << "Lua Error Generated!" << endl; // script is not loaded
+    }
+    
+    bool found = false; // if true, verb exists in the list
+    LuaRef verbs = getGlobal(L, "verbs");
+    
+    int rtn;  // return container
+    
+    // container for the verb
+    std::string fVerb;
+    
+    for (int i = 1; i < verbs.length() + 1; i++) {
+        LuaRef verb = verbs[i];
+        LuaRef synonyms = verb["synonyms"];
+        LuaRef vCast = verb["main"];
+            
+        string sCast = vCast.cast<string>();
+            
+        // check the main entry
+            
+        if (pWord == sCast) { // should never be Nil
+            fVerb = pWord;
+            found = true;
+            break;
+        } else {
+                
+            // else, check the synonyms
+            for (int j = 1; j < synonyms.length() + 1; j++) {
+                LuaRef check = synonyms[j];
+                string sCast2 = check.cast<string>();
+                    
+                if (!check.isNil()) {
+                    if (pWord == sCast2) { // if a synonym match is found
+                        fVerb = sCast; // assign it the main word, not the synonym
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (found)
+            break;
+    }
+    
+    if (!found)  { // didn't find the word
+        rtn = 0;
+        
+        if (pWord == "quit" || pWord == "exit")
+            rtn = 99;
+    } else {
+        // entry found, now the parse-tastic time
+        
+        // hard entry explicitly for "move"/"go"
+        if (pWord == "go")
+            rtn = 1;
+        
+    }
+    return rtn;
+}
