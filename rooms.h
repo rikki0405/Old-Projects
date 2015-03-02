@@ -32,6 +32,8 @@ public:
         std::string name;           // room name
         std::string description;    // description
         
+        int exits[dMAX];            // array of exits
+        
         locNode *previous;
         locNode *next;
         
@@ -43,11 +45,11 @@ public:
             next = nullptr;
         };
         
-        locNode (int x, std::string y, std::string z) {
+        locNode (locNode *&pnode, int x, std::string y, std::string z) {
             vnum = x;
             name = y;
             description = z;
-            previous = nullptr;
+            previous = pnode;
             next = nullptr;
         }
     };
@@ -59,10 +61,12 @@ public:
     };
     
     // assign exits isnt implemented yet...
-    void assignExits(location *rms, int North, int East, int South, int West, int Up, int Down);
-    void insert(locNode *&node, int vnum, string name, string description);
+    void assignExits(locNode *rms, int vnum, int North, int East, int South, int West, int Up, int Down);
+    void insert(locNode *&node, locNode *&pnode, int vnum, string name, string description);
     void description(locNode *&node, int location);
+    void description(locNode *&node, int location, bool debug);  // debug variant
     void print(locNode *&node);
+    int roomVnum(locNode *rms, const std::string roomName, const int found);
 };
 
 #endif /* defined(__Lua_TextAdv_Engine__newRooms__) */
