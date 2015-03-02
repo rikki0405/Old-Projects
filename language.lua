@@ -12,19 +12,24 @@ verbs = {
     -- verbs are validated words allowed to contain meaning
     -- each will have a base meaning, with synonymous words following
     
-    grab = {
+    { -- 3/2 starting verb parse testing with this begins
+        main = "go",
+        synonyms = { "move" }
+    },
+    
+    {
         main = "grab", -- below synonyms will return this meaning when parsed against objects
         synonyms = { "take", "pick", "nab", "pinch" }
     }, -- comma after braces IS REQUIRED!
     
-    look = {
+    {
         main = "look",
         synonyms = { "peer", "gaze", "glance" }
     },
 
-    use = {
+    {
         main = "use",
-        synonyms = { } -- empty
+        synonyms = { "tsukau" } -- don't test with empty just yet...
     } -- no comma here as it is the last table value
 }
 
