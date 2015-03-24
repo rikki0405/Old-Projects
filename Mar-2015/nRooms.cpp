@@ -18,7 +18,7 @@ void nRooms::updateRoom(nRooms *rms, nRooms *newRms) {
 
 void nRooms::loadZone(nRooms *rms, lua_State *L) {
     
-    /* Force rms to a nullptr for debugging */
+    /* Force rms to a nullptr (just in case of garbage pointer data) */
     rms = nullptr;
     
     /* Open the lua file to get data from */
