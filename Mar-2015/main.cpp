@@ -8,8 +8,6 @@
 
 #include <LuaBridge.h>
 #include <iostream>
-#include <string>
-#include <vector>
 
 extern "C" {
 # include "lua.h"
